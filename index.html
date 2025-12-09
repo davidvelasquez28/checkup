@@ -162,16 +162,6 @@
       opacity: 0.95;
     }
 
-    .button-secondary {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(75, 85, 99, 0.9);
-      box-shadow: none;
-    }
-
-    .button-secondary:hover {
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.5);
-    }
-
     .hint {
       font-size: 0.75rem;
       color: #9ca3af;
@@ -348,11 +338,6 @@
       flex-direction: column;
       gap: 6px;
     }
-
-    .history-chip {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
   </style>
 </head>
 <body>
@@ -382,7 +367,7 @@
         ></textarea>
 
         <div class="controls">
-          <button id="addButton">Add</button>
+          <button id="addButton">Add workout</button>
           <span class="hint">Enter adds, click Complete when you finish it.</span>
         </div>
 
@@ -467,4 +452,215 @@
       function formatTime(iso) {
         const d = new Date(iso);
         if (isNaN(d.getTime())) return "";
-        return d.toLocaleTimeString(unde
+        return d.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function addWorkoutLine(text) {
+        const cleaned = (text || "").trim();
+        if (!cleaned) return;
+
+        const now = new Date();
+        const workout = {
+          id: Date.now() + Math.random(),
+          text: cleaned,
+          createdAt: now.toISOString(),
+          completed: false
+        };
+        workouts.push(workout);
+        saveWorkouts();
+      }
+
+      function toggleCompleted(id) {
+        const idx = workouts.findIndex(w => String(w.id) === String(id));
+        if (idx === -1) return;
+        workouts[idx].completed = !workouts[idx].completed;
+        saveWorkouts();
+      }
+
+      function groupByDay(list) {
+        const map = {};
+        list.forEach(w => {
+          const key = getDayKey(w.createdAt);
+          if (!map[key]) map[key] = [];
+          map[key].push(w);
+        });
+        return map;
+      }
+
+      function render() {
+        const todayKey = getTodayKey();
+        const todayListEl = document.getElementById("todayList");
+        const todayLabelEl = document.getElementById("todayLabel");
+        const todayCountEl = document.getElementById("todayCount");
+        const historyListEl = document.getElementById("historyList");
+
+        todayListEl.innerHTML = "";
+        historyListEl.innerHTML = "";
+
+        const sorted = [...workouts].sort((a, b) => {
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        });
+
+        const grouped = groupByDay(sorted);
+        const dayKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a)); // newest day first
+
+        // Today
+        const todayWorkouts = grouped[todayKey] || [];
+        todayLabelEl.textContent = formatDayLabel(todayKey);
+        todayCountEl.textContent = todayWorkouts.length
+          ? `${todayWorkouts.filter(w => w.completed).length}/${todayWorkouts.length} done`
+          : "";
+
+        if (!todayWorkouts.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "No lines yet for today. Type something above and hit Add.";
+          todayListEl.appendChild(empty);
+        } else {
+          todayWorkouts.forEach(w => {
+            const card = createWorkoutCard(w);
+            todayListEl.appendChild(card);
+          });
+        }
+
+        // History (all non-today)
+        const historyKeys = dayKeys.filter(k => k !== todayKey);
+        if (!historyKeys.length) {
+          const emptyHistory = document.createElement("p");
+          emptyHistory.className = "empty";
+          emptyHistory.textContent = "No previous workouts yet.";
+          historyListEl.appendChild(emptyHistory);
+        } else {
+          historyKeys.forEach(key => {
+            const dayGroup = document.createElement("details");
+            dayGroup.className = "day-group";
+
+            const summary = document.createElement("summary");
+            summary.className = "day-group-summary";
+
+            const titleSpan = document.createElement("span");
+            titleSpan.className = "day-group-title";
+            titleSpan.textContent = formatDayLabel(key);
+
+            const dayItems = grouped[key] || [];
+            const doneCount = dayItems.filter(w => w.completed).length;
+
+            const countSpan = document.createElement("span");
+            countSpan.className = "day-group-count";
+            countSpan.textContent = `${doneCount}/${dayItems.length} done`;
+
+            summary.appendChild(titleSpan);
+            summary.appendChild(countSpan);
+            dayGroup.appendChild(summary);
+
+            const inner = document.createElement("div");
+            inner.className = "day-group-inner";
+
+            dayItems.forEach(w => {
+              const miniCard = document.createElement("div");
+              miniCard.className = "workout-card" + (w.completed ? " workout-card--completed" : "");
+              const header = document.createElement("div");
+              header.className = "workout-card-header";
+
+              const text = document.createElement("p");
+              text.className = "workout-text";
+              text.textContent = w.text;
+
+              const meta = document.createElement("div");
+              meta.className = "workout-meta";
+              meta.textContent = formatTime(w.createdAt);
+
+              header.appendChild(text);
+              header.appendChild(meta);
+
+              miniCard.appendChild(header);
+              inner.appendChild(miniCard);
+            });
+
+            dayGroup.appendChild(inner);
+            historyListEl.appendChild(dayGroup);
+          });
+        }
+      }
+
+      function createWorkoutCard(workout) {
+        const card = document.createElement("article");
+        card.className = "workout-card" + (workout.completed ? " workout-card--completed" : "");
+        card.dataset.id = workout.id;
+
+        const header = document.createElement("div");
+        header.className = "workout-card-header";
+
+        const text = document.createElement("p");
+        text.className = "workout-text";
+        text.textContent = workout.text;
+
+        const meta = document.createElement("div");
+        meta.className = "workout-meta";
+        meta.textContent = formatTime(workout.createdAt);
+
+        header.appendChild(text);
+        header.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "workout-actions";
+
+        const completePill = document.createElement("button");
+        completePill.type = "button";
+        completePill.className =
+          "complete-pill" + (workout.completed ? " complete-pill--completed" : "");
+        completePill.innerHTML = `
+          <span class="complete-pill-icon">${workout.completed ? "✅" : "○"}</span>
+          <span>${workout.completed ? "Completed" : "Complete"}</span>
+        `;
+
+        completePill.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleCompleted(workout.id);
+          render();
+        });
+
+        card.addEventListener("click", () => {
+          toggleCompleted(workout.id);
+          render();
+        });
+
+        actions.appendChild(completePill);
+        card.appendChild(header);
+        card.appendChild(actions);
+
+        return card;
+      }
+
+      function setup() {
+        const entryInput = document.getElementById("entryInput");
+        const addButton = document.getElementById("addButton");
+
+        addButton.addEventListener("click", () => {
+          const value = entryInput.value;
+          if (!value.trim()) return;
+          addWorkoutLine(value);
+          entryInput.value = "";
+          render();
+        });
+
+        // Enter adds (Shift+Enter for new line)
+        entryInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            addButton.click();
+          }
+        });
+
+        loadWorkouts();
+        render();
+      }
+
+      window.addEventListener("DOMContentLoaded", setup);
+    })();
+  </script>
+</body>
+</html>
