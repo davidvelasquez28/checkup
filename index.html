@@ -676,7 +676,11 @@
           render();
         });
 
-        card.addEventListener("click", () => {
+        // Card click toggles complete, UNLESS the click came from inside the notes area
+        card.addEventListener("click", (event) => {
+          if (event.target.closest(".notes-input")) {
+            return; // ignore clicks coming from the notes textarea
+          }
           toggleCompleted(workout.id);
           render();
         });
@@ -697,6 +701,11 @@
           notesArea.className = "notes-input";
           notesArea.placeholder = "e.g. 5×10, last 2 sets were tough, felt shoulder tightness…";
           notesArea.value = workout.notes || "";
+
+          // Prevent card click toggling when interacting with notes
+          notesArea.addEventListener("click", (e) => {
+            e.stopPropagation();
+          });
 
           notesArea.addEventListener("input", (event) => {
             updateNotes(workout.id, event.target.value);
