@@ -121,7 +121,6 @@
       font-size: 0.9rem;
       line-height: 1.4;
       outline: none;
-      min-height: 70px;
     }
 
     textarea:focus {
@@ -282,6 +281,36 @@
       color: #bbf7d0;
     }
 
+    /* Notes */
+
+    .notes-wrapper {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .notes-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .notes-input {
+      font-size: 0.8rem;
+      min-height: 50px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      resize: vertical;
+    }
+
+    .notes-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+      outline: none;
+    }
+
     /* History */
 
     .history-list {
@@ -338,6 +367,13 @@
       flex-direction: column;
       gap: 6px;
     }
+
+    .history-notes {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 2px;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -383,7 +419,7 @@
       <section class="panel panel-history">
         <h2>Previous workouts</h2>
         <p class="hint">
-          Automatically grouped by day. You can still see what was completed.
+          Grouped by day, with any notes you left.
         </p>
         <div id="historyList" class="history-list"></div>
       </section>
@@ -408,7 +444,8 @@
               id: w.id ?? (Date.now() + Math.random()),
               text: w.text || "",
               createdAt: w.createdAt || new Date().toISOString(),
-              completed: Boolean(w.completed)
+              completed: Boolean(w.completed),
+              notes: typeof w.notes === "string" ? w.notes : ""
             }));
           } else {
             workouts = [];
@@ -467,7 +504,8 @@
           id: Date.now() + Math.random(),
           text: cleaned,
           createdAt: now.toISOString(),
-          completed: false
+          completed: false,
+          notes: ""
         };
         workouts.push(workout);
         saveWorkouts();
@@ -477,6 +515,13 @@
         const idx = workouts.findIndex(w => String(w.id) === String(id));
         if (idx === -1) return;
         workouts[idx].completed = !workouts[idx].completed;
+        saveWorkouts();
+      }
+
+      function updateNotes(id, newNotes) {
+        const idx = workouts.findIndex(w => String(w.id) === String(id));
+        if (idx === -1) return;
+        workouts[idx].notes = newNotes;
         saveWorkouts();
       }
 
@@ -521,7 +566,7 @@
           todayListEl.appendChild(empty);
         } else {
           todayWorkouts.forEach(w => {
-            const card = createWorkoutCard(w);
+            const card = createWorkoutCard(w, true);
             todayListEl.appendChild(card);
           });
         }
@@ -562,6 +607,7 @@
             dayItems.forEach(w => {
               const miniCard = document.createElement("div");
               miniCard.className = "workout-card" + (w.completed ? " workout-card--completed" : "");
+
               const header = document.createElement("div");
               header.className = "workout-card-header";
 
@@ -575,8 +621,15 @@
 
               header.appendChild(text);
               header.appendChild(meta);
-
               miniCard.appendChild(header);
+
+              if (w.notes && w.notes.trim()) {
+                const notes = document.createElement("div");
+                notes.className = "history-notes";
+                notes.textContent = w.notes;
+                miniCard.appendChild(notes);
+              }
+
               inner.appendChild(miniCard);
             });
 
@@ -586,7 +639,7 @@
         }
       }
 
-      function createWorkoutCard(workout) {
+      function createWorkoutCard(workout, editableNotes) {
         const card = document.createElement("article");
         card.className = "workout-card" + (workout.completed ? " workout-card--completed" : "");
         card.dataset.id = workout.id;
@@ -629,8 +682,35 @@
         });
 
         actions.appendChild(completePill);
+
+        // Notes section (editable for today's cards)
+        let notesWrapper = null;
+        if (editableNotes) {
+          notesWrapper = document.createElement("div");
+          notesWrapper.className = "notes-wrapper";
+
+          const label = document.createElement("div");
+          label.className = "notes-label";
+          label.textContent = "Notes (reps, sets, thoughts…)";
+
+          const notesArea = document.createElement("textarea");
+          notesArea.className = "notes-input";
+          notesArea.placeholder = "e.g. 5×10, last 2 sets were tough, felt shoulder tightness…";
+          notesArea.value = workout.notes || "";
+
+          notesArea.addEventListener("input", (event) => {
+            updateNotes(workout.id, event.target.value);
+          });
+
+          notesWrapper.appendChild(label);
+          notesWrapper.appendChild(notesArea);
+        }
+
         card.appendChild(header);
         card.appendChild(actions);
+        if (notesWrapper) {
+          card.appendChild(notesWrapper);
+        }
 
         return card;
       }
