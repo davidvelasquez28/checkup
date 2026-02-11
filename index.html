@@ -11,9 +11,7 @@
       color-scheme: light dark;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -82,15 +80,8 @@
       gap: 12px;
     }
 
-    .panel-main {
-      flex: 1.3;
-      min-width: 0;
-    }
-
-    .panel-history {
-      flex: 1;
-      min-width: 0;
-    }
+    .panel-main { flex: 1.3; min-width: 0; }
+    .panel-history { flex: 1; min-width: 0; }
 
     .panel h2 {
       font-size: 0.9rem;
@@ -100,14 +91,9 @@
       margin: 0;
     }
 
-    .panel p {
-      margin: 0;
-    }
+    .panel p { margin: 0; }
 
-    label {
-      font-size: 0.85rem;
-      color: #cbd5f5;
-    }
+    label { font-size: 0.85rem; color: #cbd5f5; }
 
     textarea {
       width: 100%;
@@ -161,10 +147,7 @@
       opacity: 0.95;
     }
 
-    .hint {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
+    .hint { font-size: 0.75rem; color: #9ca3af; }
 
     .today-header {
       display: flex;
@@ -204,7 +187,7 @@
       border: 1px solid rgba(55, 65, 81, 0.9);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
       transition: background 0.15s ease, border-color 0.15s ease, transform 0.06s ease;
     }
 
@@ -230,6 +213,7 @@
     .workout-meta {
       font-size: 0.75rem;
       color: #9ca3af;
+      flex: 0 0 auto;
     }
 
     .workout-actions {
@@ -252,14 +236,8 @@
       user-select: none;
     }
 
-    .complete-pill span {
-      font-size: 0.8rem;
-    }
-
-    .complete-pill-icon {
-      font-size: 0.8rem;
-      opacity: 0.9;
-    }
+    .complete-pill span { font-size: 0.8rem; }
+    .complete-pill-icon { font-size: 0.8rem; opacity: 0.9; }
 
     .workout-card--completed {
       background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.35), rgba(15, 23, 42, 0.95));
@@ -271,9 +249,7 @@
       opacity: 0.85;
     }
 
-    .workout-card--completed .workout-meta {
-      color: #a7f3d0;
-    }
+    .workout-card--completed .workout-meta { color: #a7f3d0; }
 
     .complete-pill--completed {
       border-color: rgba(34, 197, 94, 0.9);
@@ -281,38 +257,104 @@
       color: #bbf7d0;
     }
 
-    /* Notes */
-
-    .notes-wrapper {
-      margin-top: 4px;
+    /* Sets/Reps (replaces notes) */
+    .sets-wrapper {
+      margin-top: 2px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
-    .notes-label {
+    .sets-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sets-label {
       font-size: 0.75rem;
       color: #9ca3af;
     }
 
-    .notes-input {
-      font-size: 0.8rem;
-      min-height: 50px;
+    .add-set-btn {
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      box-shadow: none;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      color: #e5e7eb;
+    }
+
+    .add-set-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: none;
+    }
+
+    .add-set-btn:active {
+      transform: translateY(0);
+      opacity: 0.95;
+    }
+
+    .sets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .set-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       padding: 6px 8px;
       border-radius: 8px;
       border: 1px solid rgba(55, 65, 81, 0.9);
       background: rgba(15, 23, 42, 0.95);
-      resize: vertical;
     }
 
-    .notes-input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    .set-label {
+      font-size: 0.78rem;
+      color: #cbd5f5;
+      min-width: 44px;
+    }
+
+    .reps-input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(2, 6, 23, 0.9);
+      color: #e5e7eb;
+      font-family: inherit;
+      font-size: 0.85rem;
       outline: none;
     }
 
-    /* History */
+    .reps-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    }
 
+    .remove-set-btn {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      box-shadow: none;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fecaca;
+    }
+
+    .remove-set-btn:hover { transform: translateY(-1px); box-shadow: none; }
+    .remove-set-btn:active { transform: translateY(0); opacity: 0.95; }
+
+    .sets-empty {
+      font-size: 0.78rem;
+      color: #6b7280;
+      padding: 2px 2px 0;
+    }
+
+    /* History */
     .history-list {
       margin-top: 6px;
       display: flex;
@@ -340,9 +382,7 @@
       color: #d1d5db;
     }
 
-    summary.day-group-summary::-webkit-details-marker {
-      display: none;
-    }
+    summary.day-group-summary::-webkit-details-marker { display: none; }
 
     .day-group-title::before {
       content: "▸";
@@ -352,9 +392,7 @@
       font-size: 0.7rem;
     }
 
-    details[open] > summary .day-group-title::before {
-      transform: rotate(90deg);
-    }
+    details[open] > summary .day-group-title::before { transform: rotate(90deg); }
 
     .day-group-count {
       font-size: 0.75rem;
@@ -368,7 +406,7 @@
       gap: 6px;
     }
 
-    .history-notes {
+    .history-sets {
       font-size: 0.75rem;
       color: #9ca3af;
       margin-top: 2px;
@@ -381,7 +419,7 @@
     <header>
       <div>
         <div class="title">Check-up</div>
-        <div class="subtitle">Type a workout line, add it, tap to complete.</div>
+        <div class="subtitle">Type a workout line, add it, log reps by set.</div>
       </div>
       <div class="subtitle">
         Stored locally · No account · Just you & the reps
@@ -389,11 +427,10 @@
     </header>
 
     <main class="layout">
-      <!-- MAIN PANEL: center input + today's workout -->
       <section class="panel panel-main">
         <h2>Today’s check-up</h2>
         <p class="hint">
-          Example: <span style="opacity:0.9;">pull-ups – 5 reps × 10 sets</span>. Or just <span style="opacity:0.9;">pull-ups</span>.
+          Example: <span style="opacity:0.9;">burpees</span>. Add it, then hit <span style="opacity:0.9;">Add set</span> and log reps.
         </p>
 
         <label for="entryInput">Workout item</label>
@@ -404,7 +441,7 @@
 
         <div class="controls">
           <button id="addButton">Add workout</button>
-          <span class="hint">Enter adds, click Complete when you finish it.</span>
+          <span class="hint">Enter adds, Shift+Enter for a new line.</span>
         </div>
 
         <div class="today-header">
@@ -415,11 +452,10 @@
         <div id="todayList" class="today-list"></div>
       </section>
 
-      <!-- HISTORY PANEL: previous days -->
       <section class="panel panel-history">
         <h2>Previous workouts</h2>
         <p class="hint">
-          Grouped by day, with any notes you left.
+          Grouped by day (read-only).
         </p>
         <div id="historyList" class="history-list"></div>
       </section>
@@ -445,7 +481,15 @@
               text: w.text || "",
               createdAt: w.createdAt || new Date().toISOString(),
               completed: Boolean(w.completed),
-              notes: typeof w.notes === "string" ? w.notes : ""
+              // New field: sets (array of reps). Keep backward compat if old data had notes.
+              sets: Array.isArray(w.sets)
+                ? w.sets.map(s => ({
+                    reps:
+                      typeof s?.reps === "number" || typeof s?.reps === "string"
+                        ? s.reps
+                        : ""
+                  }))
+                : []
             }));
           } else {
             workouts = [];
@@ -489,10 +533,7 @@
       function formatTime(iso) {
         const d = new Date(iso);
         if (isNaN(d.getTime())) return "";
-        return d.toLocaleTimeString(undefined, {
-          hour: "2-digit",
-          minute: "2-digit"
-        });
+        return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
       }
 
       function addWorkoutLine(text) {
@@ -505,7 +546,7 @@
           text: cleaned,
           createdAt: now.toISOString(),
           completed: false,
-          notes: ""
+          sets: []
         };
         workouts.push(workout);
         saveWorkouts();
@@ -518,10 +559,31 @@
         saveWorkouts();
       }
 
-      function updateNotes(id, newNotes) {
+      function addSet(id) {
         const idx = workouts.findIndex(w => String(w.id) === String(id));
         if (idx === -1) return;
-        workouts[idx].notes = newNotes;
+        workouts[idx].sets = Array.isArray(workouts[idx].sets) ? workouts[idx].sets : [];
+        workouts[idx].sets.push({ reps: "" });
+        saveWorkouts();
+      }
+
+      function removeSet(id, setIndex) {
+        const idx = workouts.findIndex(w => String(w.id) === String(id));
+        if (idx === -1) return;
+        if (!Array.isArray(workouts[idx].sets)) workouts[idx].sets = [];
+        workouts[idx].sets.splice(setIndex, 1);
+        saveWorkouts();
+      }
+
+      function updateSetReps(id, setIndex, repsValue) {
+        const idx = workouts.findIndex(w => String(w.id) === String(id));
+        if (idx === -1) return;
+
+        if (!Array.isArray(workouts[idx].sets)) workouts[idx].sets = [];
+        if (!workouts[idx].sets[setIndex]) workouts[idx].sets[setIndex] = { reps: "" };
+
+        // Keep as string so empty input stays empty (and we can parse later if needed)
+        workouts[idx].sets[setIndex].reps = repsValue;
         saveWorkouts();
       }
 
@@ -533,6 +595,15 @@
           map[key].push(w);
         });
         return map;
+      }
+
+      function formatSetsForHistory(sets) {
+        if (!Array.isArray(sets) || !sets.length) return "";
+        const reps = sets
+          .map(s => (s?.reps ?? "").toString().trim())
+          .filter(Boolean);
+        if (!reps.length) return "";
+        return `Sets: ${reps.join(" · ")}`;
       }
 
       function render() {
@@ -550,7 +621,7 @@
         });
 
         const grouped = groupByDay(sorted);
-        const dayKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a)); // newest day first
+        const dayKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
         // Today
         const todayWorkouts = grouped[todayKey] || [];
@@ -571,7 +642,7 @@
           });
         }
 
-        // History (all non-today)
+        // History (all non-today) — read-only
         const historyKeys = dayKeys.filter(k => k !== todayKey);
         if (!historyKeys.length) {
           const emptyHistory = document.createElement("p");
@@ -623,11 +694,12 @@
               header.appendChild(meta);
               miniCard.appendChild(header);
 
-              if (w.notes && w.notes.trim()) {
-                const notes = document.createElement("div");
-                notes.className = "history-notes";
-                notes.textContent = w.notes;
-                miniCard.appendChild(notes);
+              const setsLine = formatSetsForHistory(w.sets);
+              if (setsLine) {
+                const setsEl = document.createElement("div");
+                setsEl.className = "history-sets";
+                setsEl.textContent = setsLine;
+                miniCard.appendChild(setsEl);
               }
 
               inner.appendChild(miniCard);
@@ -639,7 +711,7 @@
         }
       }
 
-      function createWorkoutCard(workout, editableNotes) {
+      function createWorkoutCard(workout, editableSets) {
         const card = document.createElement("article");
         card.className = "workout-card" + (workout.completed ? " workout-card--completed" : "");
         card.dataset.id = workout.id;
@@ -676,50 +748,102 @@
           render();
         });
 
-        // Card click toggles complete, UNLESS the click came from inside the notes area
+        // Card click toggles complete, UNLESS click came from inside sets controls
         card.addEventListener("click", (event) => {
-          if (event.target.closest(".notes-input")) {
-            return; // ignore clicks coming from the notes textarea
-          }
+          if (event.target.closest(".sets-wrapper")) return;
           toggleCompleted(workout.id);
           render();
         });
 
         actions.appendChild(completePill);
 
-        // Notes section (editable for today's cards)
-        let notesWrapper = null;
-        if (editableNotes) {
-          notesWrapper = document.createElement("div");
-          notesWrapper.className = "notes-wrapper";
+        // Sets/Reps section (editable for today's cards)
+        let setsWrapper = null;
+        if (editableSets) {
+          setsWrapper = document.createElement("div");
+          setsWrapper.className = "sets-wrapper";
+
+          // Stop clicks inside sets from toggling completion
+          setsWrapper.addEventListener("click", (e) => e.stopPropagation());
+
+          const labelRow = document.createElement("div");
+          labelRow.className = "sets-label-row";
 
           const label = document.createElement("div");
-          label.className = "notes-label";
-          label.textContent = "Notes (reps, sets, thoughts…)";
+          label.className = "sets-label";
+          label.textContent = "Sets (reps)";
 
-          const notesArea = document.createElement("textarea");
-          notesArea.className = "notes-input";
-          notesArea.placeholder = "e.g. 5×10, last 2 sets were tough, felt shoulder tightness…";
-          notesArea.value = workout.notes || "";
+          const addSetBtn = document.createElement("button");
+          addSetBtn.type = "button";
+          addSetBtn.className = "add-set-btn";
+          addSetBtn.textContent = "Add set";
 
-          // Prevent card click toggling when interacting with notes
-          notesArea.addEventListener("click", (e) => {
+          addSetBtn.addEventListener("click", (e) => {
             e.stopPropagation();
+            addSet(workout.id);
+            render();
           });
 
-          notesArea.addEventListener("input", (event) => {
-            updateNotes(workout.id, event.target.value);
-          });
+          labelRow.appendChild(label);
+          labelRow.appendChild(addSetBtn);
 
-          notesWrapper.appendChild(label);
-          notesWrapper.appendChild(notesArea);
+          const list = document.createElement("div");
+          list.className = "sets-list";
+
+          const sets = Array.isArray(workout.sets) ? workout.sets : [];
+          if (!sets.length) {
+            const empty = document.createElement("div");
+            empty.className = "sets-empty";
+            empty.textContent = "No sets yet. Tap Add set.";
+            list.appendChild(empty);
+          } else {
+            sets.forEach((s, idx) => {
+              const row = document.createElement("div");
+              row.className = "set-row";
+
+              const setLabel = document.createElement("div");
+              setLabel.className = "set-label";
+              setLabel.textContent = `Set ${idx + 1}`;
+
+              const repsInput = document.createElement("input");
+              repsInput.className = "reps-input";
+              repsInput.type = "number";
+              repsInput.inputMode = "numeric";
+              repsInput.min = "0";
+              repsInput.step = "1";
+              repsInput.placeholder = "reps";
+              repsInput.value = (s?.reps ?? "").toString();
+
+              repsInput.addEventListener("input", (event) => {
+                updateSetReps(workout.id, idx, event.target.value);
+              });
+
+              const removeBtn = document.createElement("button");
+              removeBtn.type = "button";
+              removeBtn.className = "remove-set-btn";
+              removeBtn.textContent = "Remove";
+
+              removeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                removeSet(workout.id, idx);
+                render();
+              });
+
+              row.appendChild(setLabel);
+              row.appendChild(repsInput);
+              row.appendChild(removeBtn);
+
+              list.appendChild(row);
+            });
+          }
+
+          setsWrapper.appendChild(labelRow);
+          setsWrapper.appendChild(list);
         }
 
         card.appendChild(header);
         card.appendChild(actions);
-        if (notesWrapper) {
-          card.appendChild(notesWrapper);
-        }
+        if (setsWrapper) card.appendChild(setsWrapper);
 
         return card;
       }
