@@ -258,7 +258,7 @@
       color: #bbf7d0;
     }
 
-    /* Sets/Reps/Weight */
+    /* Sets */
     .sets-wrapper {
       margin-top: 2px;
       display: flex;
@@ -413,6 +413,32 @@
       padding: 2px 2px 0;
     }
 
+    /* Totals */
+    .total-row {
+      margin-top: 2px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(2, 6, 23, 0.55);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .total-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .total-value {
+      font-size: 0.9rem;
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
     /* History */
     .history-list {
       margin-top: 6px;
@@ -465,7 +491,8 @@
       gap: 6px;
     }
 
-    .history-sets {
+    .history-sets,
+    .history-total {
       font-size: 0.75rem;
       color: #9ca3af;
       margin-top: 2px;
@@ -678,6 +705,16 @@
         return map;
       }
 
+      function getLoggedRepTotal(workout) {
+        const sets = Array.isArray(workout?.sets) ? workout.sets : [];
+        return sets.reduce((sum, s) => {
+          if (!s?.logged) return sum;
+          const reps = Number((s?.reps ?? "").toString().trim());
+          if (!Number.isFinite(reps)) return sum;
+          return sum + reps;
+        }, 0);
+      }
+
       function formatSetsForHistory(sets) {
         if (!Array.isArray(sets) || !sets.length) return "";
         const lines = sets
@@ -790,6 +827,12 @@
                 miniCard.appendChild(setsEl);
               }
 
+              const total = getLoggedRepTotal(w);
+              const totalEl = document.createElement("div");
+              totalEl.className = "history-total";
+              totalEl.textContent = `Total reps: ${total}`;
+              miniCard.appendChild(totalEl);
+
               inner.appendChild(miniCard);
             });
 
@@ -899,13 +942,12 @@
 
               top.appendChild(setLabel);
               top.appendChild(actionWrap);
-
               row.appendChild(top);
 
               if (s?.logged) {
                 const reps = (s?.reps ?? "").toString().trim();
                 const weight = (s?.weight ?? "").toString().trim();
-                const line = weight ? `${reps} reps · ${weight}` : `${reps} reps · (no weight)`;
+                const line = weight ? `${reps} reps · ${weight}` : `${reps} reps`;
 
                 const locked = document.createElement("div");
                 locked.className = "locked-line";
@@ -944,7 +986,7 @@
                 const weightInput = document.createElement("input");
                 weightInput.className = "field-input";
                 weightInput.type = "text";
-                weightInput.placeholder = "e.g. 45 lb, 20kg, bodyweight";
+                weightInput.placeholder = "e.g. 45 lb, 20kg";
                 weightInput.value = (s?.weight ?? "").toString();
 
                 weightField.appendChild(weightLabel);
@@ -999,6 +1041,24 @@
 
           setsWrapper.appendChild(labelRow);
           setsWrapper.appendChild(list);
+
+          // Total reps block (logged sets only)
+          const total = getLoggedRepTotal(workout);
+          const totalRow = document.createElement("div");
+          totalRow.className = "total-row";
+
+          const totalLabel = document.createElement("div");
+          totalLabel.className = "total-label";
+          totalLabel.textContent = "Total";
+
+          const totalValue = document.createElement("div");
+          totalValue.className = "total-value";
+          totalValue.textContent = `${total} reps`;
+
+          totalRow.appendChild(totalLabel);
+          totalRow.appendChild(totalValue);
+
+          setsWrapper.appendChild(totalRow);
         }
 
         card.appendChild(header);
