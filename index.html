@@ -258,7 +258,7 @@
       color: #bbf7d0;
     }
 
-    /* Sets/Reps */
+    /* Sets/Reps/Weight */
     .sets-wrapper {
       margin-top: 2px;
       display: flex;
@@ -298,10 +298,10 @@
 
     .set-row {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 8px;
-      border-radius: 8px;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 8px 8px;
+      border-radius: 10px;
       border: 1px solid rgba(55, 65, 81, 0.9);
       background: rgba(15, 23, 42, 0.95);
     }
@@ -311,16 +311,51 @@
       background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.18), rgba(15, 23, 42, 0.95));
     }
 
+    .set-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
     .set-label {
       font-size: 0.78rem;
       color: #cbd5f5;
       min-width: 44px;
     }
 
-    .reps-input {
-      flex: 1;
-      min-width: 0;
-      padding: 6px 8px;
+    .set-actions {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 520px) {
+      .fields { grid-template-columns: 1fr; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      font-size: 0.72rem;
+      color: #9ca3af;
+      letter-spacing: 0.02em;
+    }
+
+    .field-input {
+      padding: 7px 9px;
       border-radius: 8px;
       border: 1px solid rgba(55, 65, 81, 0.9);
       background: rgba(2, 6, 23, 0.9);
@@ -330,21 +365,17 @@
       outline: none;
     }
 
-    .reps-input:focus {
+    .field-input:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
     }
 
-    .reps-locked {
-      flex: 1;
-      min-width: 0;
+    .locked-line {
       font-size: 0.85rem;
       color: #e5e7eb;
       opacity: 0.95;
-      padding: 2px 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 2px 0 0;
+      white-space: pre-wrap;
     }
 
     .submit-set-btn {
@@ -447,7 +478,7 @@
     <header>
       <div>
         <div class="title">Check-up</div>
-        <div class="subtitle">Add a workout, then submit reps by set.</div>
+        <div class="subtitle">Add a workout, then submit reps + optional weight per set.</div>
       </div>
       <div class="subtitle">
         Stored locally · No account · Just you & the reps
@@ -459,7 +490,7 @@
         <h2>Today’s check-up</h2>
         <p class="hint">
           Add a line (e.g. <span style="opacity:0.9;">burpees</span>), then hit <span style="opacity:0.9;">Add set</span>,
-          type reps, and <span style="opacity:0.9;">Submit</span> to log it.
+          enter reps (weight optional), and <span style="opacity:0.9;">Submit</span> to log it.
         </p>
 
         <label for="entryInput">Workout item</label>
@@ -515,6 +546,9 @@
                     reps:
                       typeof s?.reps === "number" || typeof s?.reps === "string"
                         ? s.reps
+                        : "",
+                    weight: typeof s?.weight === "string" || typeof s?.weight === "number"
+                        ? s.weight
                         : "",
                     logged: Boolean(s?.logged)
                   }))
@@ -592,7 +626,7 @@
         const idx = workouts.findIndex(w => String(w.id) === String(id));
         if (idx === -1) return;
         workouts[idx].sets = Array.isArray(workouts[idx].sets) ? workouts[idx].sets : [];
-        workouts[idx].sets.push({ reps: "", logged: false });
+        workouts[idx].sets.push({ reps: "", weight: "", logged: false });
         saveWorkouts();
       }
 
@@ -604,15 +638,19 @@
         saveWorkouts();
       }
 
-      // Draft typing only (NOT logged yet)
-      function updateDraftReps(id, setIndex, repsValue) {
+      function updateDraftField(id, setIndex, patch) {
         const idx = workouts.findIndex(w => String(w.id) === String(id));
         if (idx === -1) return;
 
         if (!Array.isArray(workouts[idx].sets)) workouts[idx].sets = [];
-        if (!workouts[idx].sets[setIndex]) workouts[idx].sets[setIndex] = { reps: "", logged: false };
+        if (!workouts[idx].sets[setIndex]) workouts[idx].sets[setIndex] = { reps: "", weight: "", logged: false };
 
-        workouts[idx].sets[setIndex].reps = repsValue; // keep as string
+        workouts[idx].sets[setIndex] = {
+          ...workouts[idx].sets[setIndex],
+          ...patch,
+          logged: Boolean(workouts[idx].sets[setIndex].logged)
+        };
+
         saveWorkouts();
       }
 
@@ -642,12 +680,18 @@
 
       function formatSetsForHistory(sets) {
         if (!Array.isArray(sets) || !sets.length) return "";
-        const reps = sets
+        const lines = sets
           .filter(s => s?.logged)
-          .map(s => (s?.reps ?? "").toString().trim())
+          .map(s => {
+            const reps = (s?.reps ?? "").toString().trim();
+            const weight = (s?.weight ?? "").toString().trim();
+            if (!reps) return "";
+            return weight ? `${reps} @ ${weight}` : `${reps}`;
+          })
           .filter(Boolean);
-        if (!reps.length) return "";
-        return `Sets: ${reps.join(" · ")}`;
+
+        if (!lines.length) return "";
+        return `Sets: ${lines.join(" · ")}`;
       }
 
       function render() {
@@ -801,13 +845,11 @@
 
         actions.appendChild(completePill);
 
-        // Sets/Reps section
+        // Sets section
         let setsWrapper = null;
         if (editableSets) {
           setsWrapper = document.createElement("div");
           setsWrapper.className = "sets-wrapper";
-
-          // Stop clicks inside sets from toggling completion
           setsWrapper.addEventListener("click", (e) => e.stopPropagation());
 
           const labelRow = document.createElement("div");
@@ -815,7 +857,7 @@
 
           const label = document.createElement("div");
           label.className = "sets-label";
-          label.textContent = "Sets (reps)";
+          label.textContent = "Sets (reps + optional weight)";
 
           const addSetBtn = document.createElement("button");
           addSetBtn.type = "button";
@@ -845,35 +887,73 @@
               const row = document.createElement("div");
               row.className = "set-row" + (s?.logged ? " set-row--logged" : "");
 
+              const top = document.createElement("div");
+              top.className = "set-top";
+
               const setLabel = document.createElement("div");
               setLabel.className = "set-label";
               setLabel.textContent = `Set ${idx + 1}`;
 
-              row.appendChild(setLabel);
+              const actionWrap = document.createElement("div");
+              actionWrap.className = "set-actions";
+
+              top.appendChild(setLabel);
+              top.appendChild(actionWrap);
+
+              row.appendChild(top);
 
               if (s?.logged) {
-                const repsLocked = document.createElement("div");
-                repsLocked.className = "reps-locked";
-                repsLocked.textContent = `${(s?.reps ?? "").toString().trim()} reps · logged`;
-                row.appendChild(repsLocked);
+                const reps = (s?.reps ?? "").toString().trim();
+                const weight = (s?.weight ?? "").toString().trim();
+                const line = weight ? `${reps} reps · ${weight}` : `${reps} reps · (no weight)`;
+
+                const locked = document.createElement("div");
+                locked.className = "locked-line";
+                locked.textContent = `${line} · logged`;
+                row.appendChild(locked);
               } else {
+                const fields = document.createElement("div");
+                fields.className = "fields";
+
+                const repsField = document.createElement("div");
+                repsField.className = "field";
+
+                const repsLabel = document.createElement("div");
+                repsLabel.className = "field-label";
+                repsLabel.textContent = "Reps";
+
                 const repsInput = document.createElement("input");
-                repsInput.className = "reps-input";
+                repsInput.className = "field-input";
                 repsInput.type = "number";
                 repsInput.inputMode = "numeric";
                 repsInput.min = "0";
                 repsInput.step = "1";
-                repsInput.placeholder = "reps";
+                repsInput.placeholder = "e.g. 12";
                 repsInput.value = (s?.reps ?? "").toString();
 
-                repsInput.addEventListener("input", (event) => {
-                  updateDraftReps(workout.id, idx, event.target.value);
-                  // enable/disable submit button without full re-render
-                  const val = (event.target.value ?? "").toString().trim();
-                  submitBtn.disabled = !val;
-                });
+                repsField.appendChild(repsLabel);
+                repsField.appendChild(repsInput);
 
-                row.appendChild(repsInput);
+                const weightField = document.createElement("div");
+                weightField.className = "field";
+
+                const weightLabel = document.createElement("div");
+                weightLabel.className = "field-label";
+                weightLabel.textContent = "Weight (optional)";
+
+                const weightInput = document.createElement("input");
+                weightInput.className = "field-input";
+                weightInput.type = "text";
+                weightInput.placeholder = "e.g. 45 lb, 20kg, bodyweight";
+                weightInput.value = (s?.weight ?? "").toString();
+
+                weightField.appendChild(weightLabel);
+                weightField.appendChild(weightInput);
+
+                fields.appendChild(repsField);
+                fields.appendChild(weightField);
+
+                row.appendChild(fields);
 
                 const submitBtn = document.createElement("button");
                 submitBtn.type = "button";
@@ -881,13 +961,23 @@
                 submitBtn.textContent = "Submit";
                 submitBtn.disabled = !((s?.reps ?? "").toString().trim());
 
+                repsInput.addEventListener("input", (event) => {
+                  const val = (event.target.value ?? "").toString();
+                  updateDraftField(workout.id, idx, { reps: val });
+                  submitBtn.disabled = !val.trim();
+                });
+
+                weightInput.addEventListener("input", (event) => {
+                  updateDraftField(workout.id, idx, { weight: (event.target.value ?? "").toString() });
+                });
+
                 submitBtn.addEventListener("click", (e) => {
                   e.stopPropagation();
                   submitSet(workout.id, idx);
                   render();
                 });
 
-                row.appendChild(submitBtn);
+                actionWrap.appendChild(submitBtn);
               }
 
               const removeBtn = document.createElement("button");
@@ -901,7 +991,7 @@
                 render();
               });
 
-              row.appendChild(removeBtn);
+              actionWrap.appendChild(removeBtn);
 
               list.appendChild(row);
             });
