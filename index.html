@@ -221,6 +221,7 @@
       justify-content: flex-end;
       gap: 8px;
       margin-top: 2px;
+      flex-wrap: wrap;
     }
 
     .complete-pill {
@@ -257,7 +258,7 @@
       color: #bbf7d0;
     }
 
-    /* Sets/Reps (replaces notes) */
+    /* Sets/Reps */
     .sets-wrapper {
       margin-top: 2px;
       display: flex;
@@ -286,15 +287,8 @@
       color: #e5e7eb;
     }
 
-    .add-set-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: none;
-    }
-
-    .add-set-btn:active {
-      transform: translateY(0);
-      opacity: 0.95;
-    }
+    .add-set-btn:hover { transform: translateY(-1px); box-shadow: none; }
+    .add-set-btn:active { transform: translateY(0); opacity: 0.95; }
 
     .sets-list {
       display: flex;
@@ -310,6 +304,11 @@
       border-radius: 8px;
       border: 1px solid rgba(55, 65, 81, 0.9);
       background: rgba(15, 23, 42, 0.95);
+    }
+
+    .set-row--logged {
+      border-color: rgba(34, 197, 94, 0.45);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.18), rgba(15, 23, 42, 0.95));
     }
 
     .set-label {
@@ -334,6 +333,35 @@
     .reps-input:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    }
+
+    .reps-locked {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      opacity: 0.95;
+      padding: 2px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .submit-set-btn {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      box-shadow: none;
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #bbf7d0;
+    }
+
+    .submit-set-btn:hover { transform: translateY(-1px); box-shadow: none; }
+    .submit-set-btn:active { transform: translateY(0); opacity: 0.95; }
+    .submit-set-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .remove-set-btn {
@@ -419,7 +447,7 @@
     <header>
       <div>
         <div class="title">Check-up</div>
-        <div class="subtitle">Type a workout line, add it, log reps by set.</div>
+        <div class="subtitle">Add a workout, then submit reps by set.</div>
       </div>
       <div class="subtitle">
         Stored locally · No account · Just you & the reps
@@ -430,7 +458,8 @@
       <section class="panel panel-main">
         <h2>Today’s check-up</h2>
         <p class="hint">
-          Example: <span style="opacity:0.9;">burpees</span>. Add it, then hit <span style="opacity:0.9;">Add set</span> and log reps.
+          Add a line (e.g. <span style="opacity:0.9;">burpees</span>), then hit <span style="opacity:0.9;">Add set</span>,
+          type reps, and <span style="opacity:0.9;">Submit</span> to log it.
         </p>
 
         <label for="entryInput">Workout item</label>
@@ -455,7 +484,7 @@
       <section class="panel panel-history">
         <h2>Previous workouts</h2>
         <p class="hint">
-          Grouped by day (read-only).
+          Grouped by day (read-only). Only submitted sets show up here.
         </p>
         <div id="historyList" class="history-list"></div>
       </section>
@@ -481,13 +510,13 @@
               text: w.text || "",
               createdAt: w.createdAt || new Date().toISOString(),
               completed: Boolean(w.completed),
-              // New field: sets (array of reps). Keep backward compat if old data had notes.
               sets: Array.isArray(w.sets)
                 ? w.sets.map(s => ({
                     reps:
                       typeof s?.reps === "number" || typeof s?.reps === "string"
                         ? s.reps
-                        : ""
+                        : "",
+                    logged: Boolean(s?.logged)
                   }))
                 : []
             }));
@@ -563,7 +592,7 @@
         const idx = workouts.findIndex(w => String(w.id) === String(id));
         if (idx === -1) return;
         workouts[idx].sets = Array.isArray(workouts[idx].sets) ? workouts[idx].sets : [];
-        workouts[idx].sets.push({ reps: "" });
+        workouts[idx].sets.push({ reps: "", logged: false });
         saveWorkouts();
       }
 
@@ -575,15 +604,29 @@
         saveWorkouts();
       }
 
-      function updateSetReps(id, setIndex, repsValue) {
+      // Draft typing only (NOT logged yet)
+      function updateDraftReps(id, setIndex, repsValue) {
         const idx = workouts.findIndex(w => String(w.id) === String(id));
         if (idx === -1) return;
 
         if (!Array.isArray(workouts[idx].sets)) workouts[idx].sets = [];
-        if (!workouts[idx].sets[setIndex]) workouts[idx].sets[setIndex] = { reps: "" };
+        if (!workouts[idx].sets[setIndex]) workouts[idx].sets[setIndex] = { reps: "", logged: false };
 
-        // Keep as string so empty input stays empty (and we can parse later if needed)
-        workouts[idx].sets[setIndex].reps = repsValue;
+        workouts[idx].sets[setIndex].reps = repsValue; // keep as string
+        saveWorkouts();
+      }
+
+      function submitSet(id, setIndex) {
+        const idx = workouts.findIndex(w => String(w.id) === String(id));
+        if (idx === -1) return;
+
+        const set = workouts[idx].sets?.[setIndex];
+        if (!set) return;
+
+        const repsStr = (set.reps ?? "").toString().trim();
+        if (!repsStr) return;
+
+        set.logged = true;
         saveWorkouts();
       }
 
@@ -600,6 +643,7 @@
       function formatSetsForHistory(sets) {
         if (!Array.isArray(sets) || !sets.length) return "";
         const reps = sets
+          .filter(s => s?.logged)
           .map(s => (s?.reps ?? "").toString().trim())
           .filter(Boolean);
         if (!reps.length) return "";
@@ -757,7 +801,7 @@
 
         actions.appendChild(completePill);
 
-        // Sets/Reps section (editable for today's cards)
+        // Sets/Reps section
         let setsWrapper = null;
         if (editableSets) {
           setsWrapper = document.createElement("div");
@@ -799,24 +843,52 @@
           } else {
             sets.forEach((s, idx) => {
               const row = document.createElement("div");
-              row.className = "set-row";
+              row.className = "set-row" + (s?.logged ? " set-row--logged" : "");
 
               const setLabel = document.createElement("div");
               setLabel.className = "set-label";
               setLabel.textContent = `Set ${idx + 1}`;
 
-              const repsInput = document.createElement("input");
-              repsInput.className = "reps-input";
-              repsInput.type = "number";
-              repsInput.inputMode = "numeric";
-              repsInput.min = "0";
-              repsInput.step = "1";
-              repsInput.placeholder = "reps";
-              repsInput.value = (s?.reps ?? "").toString();
+              row.appendChild(setLabel);
 
-              repsInput.addEventListener("input", (event) => {
-                updateSetReps(workout.id, idx, event.target.value);
-              });
+              if (s?.logged) {
+                const repsLocked = document.createElement("div");
+                repsLocked.className = "reps-locked";
+                repsLocked.textContent = `${(s?.reps ?? "").toString().trim()} reps · logged`;
+                row.appendChild(repsLocked);
+              } else {
+                const repsInput = document.createElement("input");
+                repsInput.className = "reps-input";
+                repsInput.type = "number";
+                repsInput.inputMode = "numeric";
+                repsInput.min = "0";
+                repsInput.step = "1";
+                repsInput.placeholder = "reps";
+                repsInput.value = (s?.reps ?? "").toString();
+
+                repsInput.addEventListener("input", (event) => {
+                  updateDraftReps(workout.id, idx, event.target.value);
+                  // enable/disable submit button without full re-render
+                  const val = (event.target.value ?? "").toString().trim();
+                  submitBtn.disabled = !val;
+                });
+
+                row.appendChild(repsInput);
+
+                const submitBtn = document.createElement("button");
+                submitBtn.type = "button";
+                submitBtn.className = "submit-set-btn";
+                submitBtn.textContent = "Submit";
+                submitBtn.disabled = !((s?.reps ?? "").toString().trim());
+
+                submitBtn.addEventListener("click", (e) => {
+                  e.stopPropagation();
+                  submitSet(workout.id, idx);
+                  render();
+                });
+
+                row.appendChild(submitBtn);
+              }
 
               const removeBtn = document.createElement("button");
               removeBtn.type = "button";
@@ -829,8 +901,6 @@
                 render();
               });
 
-              row.appendChild(setLabel);
-              row.appendChild(repsInput);
               row.appendChild(removeBtn);
 
               list.appendChild(row);
